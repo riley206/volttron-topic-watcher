@@ -50,7 +50,7 @@ from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
 from volttron import utils
 from volttron.client.messaging.health import Status, STATUS_BAD, STATUS_GOOD
 from volttron.client.vip.agent import Agent, Core, RPC
-from volttron.client.vip.agent.utils import build_agent
+from volttron.client.vip.agent import build_agent
 from volttron.utils.time import get_aware_utc_now
 from volttron.utils.scheduling import periodic
 
