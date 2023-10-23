@@ -43,10 +43,10 @@ import gevent
 import os
 import pytest
 
-from volttron.platform import get_ops, get_examples
-from volttron.platform.agent.known_identities import PLATFORM_TOPIC_WATCHER
-from volttron.platform.agent.utils import get_aware_utc_now
-from volttron.platform import jsonapi
+from volttron.client import get_ops, get_examples
+from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
+from volttron.utils.time import get_aware_utc_now
+from volttron.utils import jsonapi
 
 agent_version = '2.1'
 WATCHER_CONFIG = {
