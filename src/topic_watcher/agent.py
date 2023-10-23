@@ -46,13 +46,13 @@ import datetime
 
 from zmq import ZMQError
 
-from volttron.platform.agent.known_identities import PLATFORM_TOPIC_WATCHER
-from volttron.platform.agent import utils
-from volttron.platform.messaging.health import Status, STATUS_BAD, STATUS_GOOD
-from volttron.platform.vip.agent import Agent, Core, RPC
-from volttron.platform.vip.agent.utils import build_agent
-from volttron.platform.agent.utils import get_aware_utc_now
-from volttron.platform.scheduling import periodic
+from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
+from volttron import utils
+from volttron.client.messaging.health import Status, STATUS_BAD, STATUS_GOOD
+from volttron.client.vip.agent import Agent, Core, RPC
+from volttron.client.vip.agent.utils import build_agent
+from volttron.utils.time import get_aware_utc_now
+from volttron.utils.scheduling import periodic
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
