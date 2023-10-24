@@ -143,13 +143,15 @@ class AlertAgent(Agent):
         """
         db_dir = os.getcwd()
         data_dir = ""
-        if utils.is_secure_mode():
-            for d  in os.listdir(os.path.basename(os.getcwd())):
-                if d.endswith(".agent-data"):
-                    data_dir = d
-                    break
-            if data_dir:
-                db_dir = os.path.join(os.getcwd(), data_dir)
+        # TODO When modular has secure mode.
+        if False:
+            if utils.is_secure_mode():
+                for d  in os.listdir(os.path.basename(os.getcwd())):
+                    if d.endswith(".agent-data"):
+                        data_dir = d
+                        break
+                if data_dir:
+                    db_dir = os.path.join(os.getcwd(), data_dir)
 
         self._connection = sqlite3.connect(
             os.path.join(db_dir, 'alert_log.sqlite'),
