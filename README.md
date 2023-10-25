@@ -1,8 +1,64 @@
-## Topic Watcher Agent
+## volttron-topic-watcher
 
 The Topic Watcher Agent listens to a set of configured topics and publishes an alert if they are not published within 
 some time limit.  In addition to for individual messages or data points, the Topic Watcher Agent supports inspecting 
 device "all" topics.  This can be useful when a device contains volatile points that may not be published.
+
+# Prerequisites
+
+* Python 3.8
+
+## Python
+
+<details>
+<summary>To install Python 3.8, we recommend using <a href="https://github.com/pyenv/pyenv"><code>pyenv</code></a>.</summary>
+
+```bash
+# install pyenv
+git clone https://github.com/pyenv/pyenv ~/.pyenv
+
+# setup pyenv (you should also put these three lines in .bashrc or similar)
+export PATH="${HOME}/.pyenv/bin:${PATH}"
+export PYENV_ROOT="${HOME}/.pyenv"
+eval "$(pyenv init -)"
+
+# install Python 3.8
+pyenv install 3.8.10
+
+# make it available globally
+pyenv global system 3.8.10
+```
+</details>
+
+# Installation
+
+1. Create and activate a virtual environment.
+
+    ```shell
+    python -m venv env
+    source env/bin/activate
+    ```
+2. Install volttron and start the platform.
+
+    ```shell
+    pip install volttron
+
+    # Start platform with output going to volttron.log
+    volttron -vv -l volttron.log &
+    ```
+
+3. Install the topic watcher library.
+    ```shell
+    pip install volttron-topic-watcher
+    ```
+
+4. Intsall topic watcher in VOLTTRON.
+
+    Installing the topic watcher into volttron requires to you setup a configuration file. Examples are shown below in the configuration section. Once finished, install and start the topic watcher.
+
+    ```shell
+    vctl install volttron-topic-watcher --vip-identity platform.topic_watcher --agent-config <path to config> --start
+    ```
 
 
 ### Configuration
@@ -68,3 +124,20 @@ Message: ('{"status": "BAD", "context": "Topic(s) not published within time limi
            '[\'devices/fakedriver0/all\']", "last_updated": '
            '"2021-01-25T23:10:07.905633+00:00"}')
 ```
+# Disclaimer Notice
+
+This material was prepared as an account of work sponsored by an agency of the
+United States Government.  Neither the United States Government nor the United
+States Department of Energy, nor Battelle, nor any of their employees, nor any
+jurisdiction or organization that has cooperated in the development of these
+materials, makes any warranty, express or implied, or assumes any legal
+liability or responsibility for the accuracy, completeness, or usefulness or any
+information, apparatus, product, software, or process disclosed, or represents
+that its use would not infringe privately owned rights.
+
+Reference herein to any specific commercial product, process, or service by
+trade name, trademark, manufacturer, or otherwise does not necessarily
+constitute or imply its endorsement, recommendation, or favoring by the United
+States Government or any agency thereof, or Battelle Memorial Institute. The
+views and opinions of authors expressed herein do not necessarily state or
+reflect those of the United States Government or any agency thereof.
