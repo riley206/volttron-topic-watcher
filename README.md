@@ -52,12 +52,12 @@ pyenv global system 3.8.10
     pip install volttron-topic-watcher
     ```
 
-4. Intsall topic watcher in VOLTTRON.
+4. Intsall and start topic watcher in VOLTTRON.
 
-    Installing the topic watcher into volttron requires to you setup a configuration file. Examples are shown below in the configuration section. Once finished, install and start the topic watcher.
+    Installing the topic watcher into VOLTTRON requires you to setup a configuration file. Instructions are shown below in the configuration section. Once finished, install and start the topic watcher.
 
     ```shell
-    vctl install volttron-topic-watcher --vip-identity platform.topic_watcher --agent-config <path to config> --start
+    vctl install volttron-topic-watcher --agent-config <path to config> --vip-identity platform.topic_watcher --start --force
     ```
 
 
