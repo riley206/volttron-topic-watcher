@@ -127,8 +127,8 @@ class AlertAgent(Agent):
         """
         Setup database tables for persistent logs
         """
-        db_dir = os.getcwd()
-        data_dir = ""
+        volttron_home = os.environ.get('VOLTTRON_HOME')
+        db_dir = os.path.join(volttron_home, 'agents', 'platform.topic_watcher', 'data')
         # TODO When modular has secure mode.
         if False:
             if utils.is_secure_mode():
