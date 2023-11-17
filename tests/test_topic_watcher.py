@@ -85,14 +85,10 @@ def agent(request, volttron_instance):
                                 'topic-watcheragent-' + agent_version + '.agent-data',
                                 'alert_log.sqlite')
     else:
-        temp_dir = tempfile.mkdtemp()
-        db_path = os.path.join(temp_dir, 'alert_log.sqlite')
-        print("DB PATH: {}".format(db_path))
-    #     db_path = os.path.join(volttron_instance.volttron_home, 'agents',
-    #                         alert_uuid, 'volttron-topic-watcher',
-    #                         'alert_log.sqlite')
+        volttron_home = os.environ.get('VOLTTRON_HOME')
+        db_path = os.path.join(volttron_home, 'agents', 'platform.topic_watcher', 'data', 'alert_log.sqlite')
 
-    # print("DB PATH: {}".format(db_path))
+    print("DB PATH: {}".format(db_path))
     db_connection = sqlite3.connect(
         db_path,
         detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
