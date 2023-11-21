@@ -42,13 +42,10 @@ import sqlite3
 import gevent
 import os
 import pytest
-import tempfile
 
-#from volttron.client import get_ops, get_examples
 from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
 from volttron.utils.time import get_aware_utc_now
 from volttron.utils import jsonapi
-from volttrontesting.fixtures.volttron_platform_fixtures import volttron_instance
 
 agent_version = '2.1'
 WATCHER_CONFIG = {
@@ -71,13 +68,14 @@ alert_uuid = None
 @pytest.fixture(scope='module')
 def agent(request, volttron_instance):
     global db_connection, agent_version, db_path, alert_uuid
-    #assert os.path.exists(get_ops("TopicWatcher"))
+
     alert_uuid = volttron_instance.install_agent(
-        agent_dir=".",
+        agent_dir="volttron-topic-watcher",
         config_file=WATCHER_CONFIG,
         vip_identity=PLATFORM_TOPIC_WATCHER
     )
     gevent.sleep(2)
+    # TODO When modular supports isolation_mode
     if False:
         if volttron_instance.agent_isolation_mode:
             db_path = os.path.join(volttron_instance.volttron_home, 'agents',
@@ -85,8 +83,8 @@ def agent(request, volttron_instance):
                                 'topic-watcheragent-' + agent_version + '.agent-data',
                                 'alert_log.sqlite')
     else:
-        volttron_home = os.environ.get('VOLTTRON_HOME')
-        db_path = os.path.join(volttron_home, 'agents', 'platform.topic_watcher', 'data', 'alert_log.sqlite')
+        db_path = os.path.join(volttron_instance.volttron_home, 'agents', 
+                               'platform.topic_watcher', 'data', 'alert_log.sqlite')
 
     print("DB PATH: {}".format(db_path))
     db_connection = sqlite3.connect(
