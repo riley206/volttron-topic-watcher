@@ -32,7 +32,6 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-gevent = "^22.10.2"
 volttron = "^10.0.4rc1"
 
 [tool.poetry.group.dev.dependencies]
