@@ -22,23 +22,21 @@
 # ===----------------------------------------------------------------------===
 # }}}
 
+import datetime
+import gevent
 import logging
 import os
-
-import gevent
-
 import sqlite3
-import datetime
 
 from zmq import ZMQError
 
-from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
 from volttron import utils
+from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
 from volttron.client.messaging.health import Status, STATUS_BAD, STATUS_GOOD
 from volttron.client.vip.agent import Agent, Core, RPC
 from volttron.client.vip.agent import build_agent
-from volttron.utils.time import get_aware_utc_now
 from volttron.utils.scheduling import periodic
+from volttron.utils.time import get_aware_utc_now
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -47,7 +45,7 @@ __version__ = '2.1'
 
 
 class AlertAgent(Agent):
-    def __init__(self, config_path, **kwargs):
+    def __init__(self, config_path: str, **kwargs: any):
         super(AlertAgent, self).__init__(**kwargs)
         self.config = utils.load_config(config_path)
         self.group_instances = {}
@@ -192,7 +190,7 @@ class AlertAgent(Agent):
         self._connection.close()
 
     @RPC.export
-    def watch_topic(self, group, topic, timeout):
+    def watch_topic(self, group: str, topic: str, timeout: int):
         """RPC method
 
         Listen for a topic to be published within a given
@@ -216,7 +214,7 @@ class AlertAgent(Agent):
             self.group_instances[group].restart_timer()
 
     @RPC.export
-    def watch_device(self, group, topic, timeout, points):
+    def watch_device(self, group: str, topic: str, timeout: int, points: str):
         """RPC method
 
         Watch a device's ALL topic and expect points. If the given group is new
@@ -241,7 +239,7 @@ class AlertAgent(Agent):
             self.group_instances[group].restart_timer()
 
     @RPC.export
-    def ignore_topic(self, group, topic):
+    def ignore_topic(self, group: str, topic: str):
         """RPC method
 
         Remove a topic from agent's watch list. Alerts will no
@@ -340,7 +338,7 @@ class AlertGroup():
                 timeout = config[topic]
                 self.watch_topic(topic, timeout)
 
-    def watch_topic(self, topic, timeout):
+    def watch_topic(self, topic: str, timeout: int):
         """Listen for a topic to be published within a given
         number of seconds or send alerts.
 
@@ -353,7 +351,7 @@ class AlertGroup():
         self.topic_ttl[topic] = timeout
         self.main_agent.vip.pubsub.subscribe(peer='pubsub', prefix=topic, callback=self.reset_time)
 
-    def watch_device(self, topic, timeout, points):
+    def watch_device(self, topic: str, timeout: int, points: str):
         """Watch a device's ALL topic and expect points. This
         method calls the watch topic method so both methods
         don't need to be called.
@@ -372,7 +370,7 @@ class AlertGroup():
 
         self.watch_topic(topic, timeout)
 
-    def ignore_topic(self, topic):
+    def ignore_topic(self, topic: str):
         """Remove a topic from the group watchlist
 
         :param topic: Topic to remove from the watch list.
@@ -469,7 +467,7 @@ class AlertGroup():
         c.close()
         self.connection.commit()
 
-    def log_time_up(self, up_time, log_topics):
+    def log_time_up(self, up_time: datetime, log_topics):
         """
         Log into topic_log table when the alert agent found publishes to a topic
         after the last time it timed out.
@@ -496,7 +494,7 @@ class AlertGroup():
         self.connection.commit()
 
     @staticmethod
-    def get_topic_name(parts):
+    def get_topic_name(parts: str | list) -> str:
         """
         Return the input parameter if input parameter is a string. If input
         parameter is a tuple, expects an all topic as the first list element
@@ -520,7 +518,7 @@ class AlertGroup():
                              "alert agent configuration".format(parts))
 
 
-    def send_alert(self, unseen_topics):
+    def send_alert(self, unseen_topics: list):
         """Send an alert for the group, summarizing missing topics.
 
         :param unseen_topics: List of topics that were expected but not received
