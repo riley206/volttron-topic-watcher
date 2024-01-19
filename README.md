@@ -104,11 +104,11 @@ It is possible to configure the Topic Watcher to handle both "all" topics and si
 }
 ```
 
-1. Intsall and start topic watcher in VOLTTRON.
+4. Intsall and start topic watcher in VOLTTRON.
 
-    ```shell
-    vctl install volttron-topic-watcher --agent-config topic_watcher.config --vip-identity platform.topic_watcher --start --force
-    ```
+```shell
+vctl install volttron-topic-watcher --agent-config topic_watcher.config --vip-identity platform.topic_watcher --start --force
+```
 
 ### Example Publish
 
