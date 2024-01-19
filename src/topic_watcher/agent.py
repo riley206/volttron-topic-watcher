@@ -23,20 +23,18 @@
 # }}}
 
 import datetime
-import gevent
 import logging
 import os
 import sqlite3
 
-from zmq import ZMQError
-
+import gevent
 from volttron import utils
 from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
-from volttron.client.messaging.health import Status, STATUS_BAD, STATUS_GOOD
-from volttron.client.vip.agent import Agent, Core, RPC
-from volttron.client.vip.agent import build_agent
+from volttron.client.messaging.health import STATUS_BAD, STATUS_GOOD, Status
+from volttron.client.vip.agent import RPC, Agent, Core, build_agent
 from volttron.utils.scheduling import periodic
 from volttron.utils.time import get_aware_utc_now
+from zmq import ZMQError
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)

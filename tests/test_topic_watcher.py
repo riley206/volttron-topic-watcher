@@ -23,15 +23,14 @@
 # }}}
 
 
+import os
 import sqlite3
 
 import gevent
-import os
 import pytest
-
 from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
-from volttron.utils.time import get_aware_utc_now
 from volttron.utils import jsonapi
+from volttron.utils.time import get_aware_utc_now
 
 agent_version = '2.1'
 WATCHER_CONFIG = {
@@ -69,7 +68,7 @@ def agent(request, volttron_instance):
                                 'topic-watcheragent-' + agent_version + '.agent-data',
                                 'alert_log.sqlite')
     else:
-        db_path = os.path.join(volttron_instance.volttron_home, 'agents', 
+        db_path = os.path.join(volttron_instance.volttron_home, 'agents',
                                'platform.topic_watcher', 'data', 'alert_log.sqlite')
 
     print("DB PATH: {}".format(db_path))
@@ -519,5 +518,3 @@ def test_for_duplicate_logs(volttron_instance, agent, cleanup_db):
         assert r[1] is None
         naive_timestamp = publish_time.replace(tzinfo=None)
         assert r[2] >= naive_timestamp
-
-

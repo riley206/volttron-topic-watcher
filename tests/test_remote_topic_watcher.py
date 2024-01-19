@@ -26,9 +26,8 @@
 
 import gevent
 import pytest
-
-from volttron.utils import jsonapi
 from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
+from volttron.utils import jsonapi
 from volttron.utils.time import get_aware_utc_now
 
 alert_messages = {}
