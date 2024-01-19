@@ -1,17 +1,17 @@
-## volttron-topic-watcher
+# volttron-topic-watcher
 
 The Topic Watcher Agent listens to a set of configured topics and publishes an alert if they are not published within
 some time limit.  In addition to for individual messages or data points, the Topic Watcher Agent supports inspecting
 device "all" topics.  This can be useful when a device contains volatile points that may not be published.
 
-# Prerequisites
+## Prerequisites
 
-* Python 3.8
+* Python 3.10
 
 ## Python
 
 <details>
-<summary>To install Python 3.8, we recommend using <a href="https://github.com/pyenv/pyenv"><code>pyenv</code></a>.</summary>
+<summary>To install Python 3.10, we recommend using <a href="https://github.com/pyenv/pyenv"><code>pyenv</code></a>.</summary>
 
 ```bash
 # install pyenv
@@ -22,98 +22,99 @@ export PATH="${HOME}/.pyenv/bin:${PATH}"
 export PYENV_ROOT="${HOME}/.pyenv"
 eval "$(pyenv init -)"
 
-# install Python 3.8
-pyenv install 3.8.10
+# install Python 3.10
+pyenv install 3.10
 
 # make it available globally
-pyenv global system 3.8.10
+pyenv global system 3.10
 ```
+
 </details>
 
-# Installation
+## Installation
 
 1. Create and activate a virtual environment.
 
-    ```shell
-    python -m venv env
-    source env/bin/activate
-    ```
-1. Install volttron and start the platform.
+```shell
+python -m venv env
+source env/bin/activate
+```
 
-    ```shell
-    pip install volttron
+2. Install volttron and start the platform.
 
-    # Start platform with output going to volttron.log
-    volttron -vv -l volttron.log &
-    ```
-1. Create a config directory and navigate to it:
+```shell
+pip install volttron
 
-    ```shell
-    mkdir config
-    cd config
-    ```
+# Start platform with output going to volttron.log
+volttron -vv -l volttron.log &
+```
 
-    Navigate to the config directory and create a file called `config`. Use the instructions below to populate that file with the correct JSON.
+3. Create a config directory and navigate to it:
 
+```shell
+mkdir config
+cd config
+```
 
+Navigate to the config directory and create a file called `topic_watcher.config`. Use the instructions below to populate that file with the correct JSON.
 
+Topics are organized by groups in a JSON structure with the group's identifier as the key. Any alerts raised will
+summarize all missing topics in the group.
 
-    Topics are organized by groups in a JSON structure with the group's identifier as the key. Any alerts raised will
-    summarize all missing topics in the group.
+There are two configuration options for watching topics.  For single message topics (such as a single
+device point), configuration consists of a key value pair of the topic to its time limit.
 
-    There are two configuration options for watching topics.  For single message topics (such as a single
-    device point), configuration consists of a key value pair of the topic to its time limit.
-
-    ```
-    {
-        "groupname: {
-            "devices/campus/building/point": 10
-        }
+```json
+{
+    "groupname: {
+        "devices/campus/building/point": 10
     }
-    ```
+}
+```
 
-    For points published in an "all" style publish, configuration consts of a key mapping to an object as follows:
-    A `seconds` key for the time limit in seconds, and a `points` key consisting of a list of individual points in the
-    `all` publish.
+For points published in an "all" style publish, configuration consts of a key mapping to an object as follows:
+A `seconds` key for the time limit in seconds, and a `points` key consisting of a list of individual points in the
+`all` publish.
 
-    The following is an example "all" publish configuration which configures the Topic Watcher to check for the `temperature`
-    and `PowerState` points which are expected to be inside the "all" publishes.
+The following is an example "all" publish configuration which configures the Topic Watcher to check for the `temperature`
+and `PowerState` points which are expected to be inside the "all" publishes.
 
-    ```
-    {
-        "groupname": {
-                "devices/fakedriver1/all": {
-                "seconds": 10,
-                "points": ["temperature", "PowerState"]
-            }
-        }
-    }
-    ```
-
-    It is possible to configure the Topic Watcher to handle both "all" topics and single point topics for the same group:
-
-    ```
-    {
-        "groupname": {
-            "devices/fakedriver0/all": 10,
+```json
+{
+    "groupname": {
             "devices/fakedriver1/all": {
-                "seconds": 10,
-                "points": ["temperature", "PowerState"]
-            }
+            "seconds": 10,
+            "points": ["temperature", "PowerState"]
         }
     }
-    ```
+}
+```
+
+It is possible to configure the Topic Watcher to handle both "all" topics and single point topics for the same group:
+
+```json
+{
+    "groupname": {
+        "devices/fakedriver0/all": 10,
+        "devices/fakedriver1/all": {
+            "seconds": 10,
+            "points": ["temperature", "PowerState"]
+        }
+    }
+}
+```
 
 1. Intsall and start topic watcher in VOLTTRON.
 
     ```shell
-    vctl install volttron-topic-watcher --agent-config <path to config> --vip-identity platform.topic_watcher --start --force
+    vctl install volttron-topic-watcher --agent-config topic_watcher.config --vip-identity platform.topic_watcher --start --force
     ```
+
 ### Example Publish
 
 The following is an example publish from the Topic Watcher Agent using the above configuration.
 
-```
+```log
 Peer: pubsub
 Sender: platform.topic_watcher
 Bus:
@@ -123,7 +124,8 @@ Message: ('{"status": "BAD", "context": "Topic(s) not published within time limi
            '[\'devices/fakedriver0/all\']", "last_updated": '
            '"2021-01-25T23:10:07.905633+00:00"}')
 ```
-# Disclaimer Notice
+
+## Disclaimer Notice
 
 This material was prepared as an account of work sponsored by an agency of the
 United States Government.  Neither the United States Government nor the United
