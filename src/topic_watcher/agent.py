@@ -43,6 +43,7 @@ __version__ = '2.1'
 
 
 class AlertAgent(Agent):
+
     def __init__(self, config_path: str, **kwargs: any):
         super(AlertAgent, self).__init__(**kwargs)
         self.config = utils.load_config(config_path)
@@ -87,8 +88,7 @@ class AlertAgent(Agent):
                     # rmq -> rmq enabled with web
                     # zmq -> zmq enabled with web
                     # rmq -> zmq enabled with web
-                    value = self.core.connect_remote_platform(self.remote_address,
-                                                                  serverkey=self.remote_serverkey)
+                    value = self.core.connect_remote_platform(self.remote_address, serverkey=self.remote_serverkey)
 
                     if isinstance(value, Agent):
                         self._remote_agent = value
@@ -96,14 +96,12 @@ class AlertAgent(Agent):
                         self.vip.health.set_status(STATUS_GOOD)
                     else:
                         _log.error("Exception creation remote agent")
-                        status_context = "Couldn't connect to remote platform at: {}".format(
-                            self.remote_address)
+                        status_context = "Couldn't connect to remote platform at: {}".format(self.remote_address)
                         _log.error(status_context)
                         self._remote_agent = None
                 except (gevent.Timeout, ZMQError):
                     _log.error("Exception creation remote agent")
-                    status_context = "Couldn't connect to remote platform at: {}".format(
-                        self.remote_address)
+                    status_context = "Couldn't connect to remote platform at: {}".format(self.remote_address)
                     _log.error(status_context)
                     self._remote_agent = None
                     self.vip.health.set_status(STATUS_BAD, status_context)
@@ -128,16 +126,15 @@ class AlertAgent(Agent):
         # TODO When modular has secure mode.
         if False:
             if utils.is_secure_mode():
-                for d  in os.listdir(os.path.basename(os.getcwd())):
+                for d in os.listdir(os.path.basename(os.getcwd())):
                     if d.endswith(".agent-data"):
                         data_dir = d
                         break
                 if data_dir:
                     db_dir = os.path.join(os.getcwd(), data_dir)
 
-        self._connection = sqlite3.connect(
-            os.path.join(db_dir, 'alert_log.sqlite'),
-            detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+        self._connection = sqlite3.connect(os.path.join(db_dir, 'alert_log.sqlite'),
+                                           detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         c = self._connection.cursor()
 
         c.execute("CREATE TABLE IF NOT EXISTS topic_log( "
@@ -153,14 +150,12 @@ class AlertAgent(Agent):
         c.execute("CREATE INDEX IF NOT EXISTS up_time_index ON "
                   "topic_log (first_seen_after_timeout)")
 
-
         c.execute("CREATE TABLE IF NOT EXISTS agent_log ("
                   "start_time TIMESTAMP, "
                   "stop_time TIMESTAMP)")
         c.execute("CREATE INDEX IF NOT EXISTS stop_ts_index ON "
                   "agent_log (stop_time)")
-        c.execute("INSERT INTO agent_log(start_time) values(?)",
-                  (get_aware_utc_now(),))
+        c.execute("INSERT INTO agent_log(start_time) values(?)", (get_aware_utc_now(), ))
         c.close()
         self._connection.commit()
 
@@ -169,7 +164,9 @@ class AlertAgent(Agent):
                 self.group_instances[group_name] = self.create_alert_group(group_name, config)
 
     def create_alert_group(self, group_name, config):
-        group = AlertGroup(group_name, config, self._connection,
+        group = AlertGroup(group_name,
+                           config,
+                           self._connection,
                            main_agent=self,
                            publish_local=self.publish_local,
                            publish_remote=self.publish_remote)
@@ -180,8 +177,7 @@ class AlertAgent(Agent):
     def onstop(self, sender, **kwargs):
         c = self._connection.cursor()
         c.execute("UPDATE agent_log set stop_time = ? "
-                  " WHERE start_time = (SELECT max(start_time) from agent_log)",
-                  (get_aware_utc_now(),))
+                  " WHERE start_time = (SELECT max(start_time) from agent_log)", (get_aware_utc_now(), ))
         c.close()
         gevent.sleep(0.1)
         self._connection.commit()
@@ -205,8 +201,7 @@ class AlertAgent(Agent):
         :type timeout: int
         """
         if self.group_instances.get(group) is None:
-            self.group_instances[group] = self.create_alert_group(group,
-                                                                  {topic: timeout})
+            self.group_instances[group] = self.create_alert_group(group, {topic: timeout})
         else:
             self.group_instances[group].watch_topic(topic, timeout)
             self.group_instances[group].restart_timer()
@@ -229,9 +224,11 @@ class AlertAgent(Agent):
         :type points: [str]
         """
         if self.group_instances.get(group) is None:
-            self.group_instances[group] = self.create_alert_group(
-                group,
-                {topic: {"seconds": timeout, "points": points}})
+            self.group_instances[group] = self.create_alert_group(group,
+                                                                  {topic: {
+                                                                      "seconds": timeout,
+                                                                      "points": points
+                                                                  }})
         else:
             self.group_instances[group].watch_device(topic, timeout, points)
             self.group_instances[group].restart_timer()
@@ -302,8 +299,8 @@ class AlertAgent(Agent):
 
 
 class AlertGroup():
-    def __init__(self, group_name, config, connection, main_agent,
-                 publish_local=True, publish_remote=False):
+
+    def __init__(self, group_name, config, connection, main_agent, publish_local=True, publish_remote=False):
         self.group_name = group_name
         self.connection = connection
         self.config = config
@@ -327,9 +324,7 @@ class AlertGroup():
             # might not be published.
             if type(config[topic]) is dict:
                 point_config = config[topic]
-                self.watch_device(topic,
-                                  point_config["seconds"],
-                                  point_config["points"])
+                self.watch_device(topic, point_config["seconds"], point_config["points"])
 
             # Default config option
             else:
@@ -415,8 +410,7 @@ class AlertGroup():
                     found = True
                     break
             if not found:
-                _log.debug("No configured topic prefix for topic {}".format(
-                    topic))
+                _log.debug("No configured topic prefix for topic {}".format(topic))
                 return
 
         log_topics = set()
@@ -455,13 +449,11 @@ class AlertGroup():
         """
         values = []
         for topic in log_topics:
-            values.append((self.get_topic_name(topic),
-                           self.last_seen.get(topic)))
+            values.append((self.get_topic_name(topic), self.last_seen.get(topic)))
 
         c = self.connection.cursor()
-        c.executemany(
-            "INSERT INTO topic_log (topic, last_seen_before_timeout) "
-            "VALUES (?, ?)", values)
+        c.executemany("INSERT INTO topic_log (topic, last_seen_before_timeout) "
+                      "VALUES (?, ?)", values)
         c.close()
         self.connection.commit()
 
@@ -481,12 +473,12 @@ class AlertGroup():
         """
         c = self.connection.cursor()
         for topic in log_topics:
-            c.execute("UPDATE topic_log "
-                      "SET first_seen_after_timeout = ? "
-                      "WHERE rowid = "
-                      " (SELECT max(rowid) FROM topic_log "
-                      "  WHERE topic = ? )",
-                      (up_time, self.get_topic_name(topic)))
+            c.execute(
+                "UPDATE topic_log "
+                "SET first_seen_after_timeout = ? "
+                "WHERE rowid = "
+                " (SELECT max(rowid) FROM topic_log "
+                "  WHERE topic = ? )", (up_time, self.get_topic_name(topic)))
 
         c.close()
         self.connection.commit()
@@ -515,7 +507,6 @@ class AlertGroup():
                              "/all use standard topic configuration format in "
                              "alert agent configuration".format(parts))
 
-
     def send_alert(self, unseen_topics: list):
         """Send an alert for the group, summarizing missing topics.
 
@@ -526,7 +517,7 @@ class AlertGroup():
         _log.debug(f"unseen_topics {unseen_topics}")
         _log.debug(f"sorted : {sorted(unseen_topics, key = lambda x: x[0] if isinstance(x, tuple) else x)}")
         context = "Topic(s) not published within time limit: {}".format(
-             sorted(unseen_topics, key = lambda x: x[0] if isinstance(x, tuple) else x))
+            sorted(unseen_topics, key=lambda x: x[0] if isinstance(x, tuple) else x))
         status = Status.build(STATUS_BAD, context=context)
         if self.publish_remote:
             try:

@@ -12,8 +12,14 @@ repos:
   - id: check-merge-conflict
   - id: no-commit-to-branch  # blocks main commits.  To bypass do git commit --allow-empty
   - id: pretty-format-json
-- repo: https://github.com/pycqa/isort
-  rev: 5.13.2
+
+- repo: https://github.com/craig8/mirrors-yapf
+  rev: v0.32.0  # Use the sha / tag you want to point at
   hooks:
-    - id: isort
-      name: isort (python)
+  - id: yapf
+    name: yapf
+    description: "A formatter for Python files."
+    entry: yapf
+    language: python
+    types: [ python ]
+    additional_dependencies: [toml]

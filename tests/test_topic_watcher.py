@@ -22,7 +22,6 @@
 # ===----------------------------------------------------------------------===
 # }}}
 
-
 import os
 import sqlite3
 
@@ -33,15 +32,7 @@ from volttron.utils import jsonapi
 from volttron.utils.time import get_aware_utc_now
 
 agent_version = '2.1'
-WATCHER_CONFIG = {
-    "group1": {
-        "fakedevice": 5,
-        "fakedevice2/all": {
-            "seconds": 5,
-            "points": ["point"]
-        }
-    }
-}
+WATCHER_CONFIG = {"group1": {"fakedevice": 5, "fakedevice2/all": {"seconds": 5, "points": ["point"]}}}
 
 alert_messages = {}
 
@@ -54,27 +45,22 @@ alert_uuid = None
 def agent(request, volttron_instance):
     global db_connection, agent_version, db_path, alert_uuid
 
-    alert_uuid = volttron_instance.install_agent(
-        agent_dir="volttron-topic-watcher",
-        config_file=WATCHER_CONFIG,
-        vip_identity=PLATFORM_TOPIC_WATCHER
-    )
+    alert_uuid = volttron_instance.install_agent(agent_dir="volttron-topic-watcher",
+                                                 config_file=WATCHER_CONFIG,
+                                                 vip_identity=PLATFORM_TOPIC_WATCHER)
     gevent.sleep(2)
     # TODO When modular supports isolation_mode
     if False:
         if volttron_instance.agent_isolation_mode:
-            db_path = os.path.join(volttron_instance.volttron_home, 'agents',
-                                alert_uuid, 'topic_watcheragent-' + agent_version,
-                                'topic-watcheragent-' + agent_version + '.agent-data',
-                                'alert_log.sqlite')
+            db_path = os.path.join(volttron_instance.volttron_home, 'agents', alert_uuid,
+                                   'topic_watcheragent-' + agent_version,
+                                   'topic-watcheragent-' + agent_version + '.agent-data', 'alert_log.sqlite')
     else:
-        db_path = os.path.join(volttron_instance.volttron_home, 'agents',
-                               'platform.topic_watcher', 'data', 'alert_log.sqlite')
+        db_path = os.path.join(volttron_instance.volttron_home, 'agents', 'platform.topic_watcher', 'data',
+                               'alert_log.sqlite')
 
     print("DB PATH: {}".format(db_path))
-    db_connection = sqlite3.connect(
-        db_path,
-        detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+    db_connection = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 
     agent = volttron_instance.build_agent()
 
@@ -89,9 +75,7 @@ def agent(request, volttron_instance):
             alert_messages[alert] = 1
         print("In on message: {}".format(alert_messages))
 
-    agent.vip.pubsub.subscribe(peer='pubsub',
-                               prefix='alerts',
-                               callback=onmessage)
+    agent.vip.pubsub.subscribe(peer='pubsub', prefix='alerts', callback=onmessage)
 
     def stop():
         volttron_instance.stop_agent(alert_uuid)
@@ -120,14 +104,11 @@ def test_basic(agent):
     """
     global alert_messages, db_connection
     publish_time = get_aware_utc_now()
-    print (f"publish time is {publish_time}")
+    print(f"publish time is {publish_time}")
     for _ in range(5):
         alert_messages.clear()
-        agent.vip.pubsub.publish(peer='pubsub',
-                                 topic='fakedevice')
-        agent.vip.pubsub.publish(peer='pubsub',
-                                 topic='fakedevice2/all',
-                                 message=[{'point': 'value'}])
+        agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+        agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
         gevent.sleep(1)
 
     assert not alert_messages
@@ -150,13 +131,12 @@ def test_basic(agent):
     for r in results:
         topics.append(r[0])
         assert r[1] is not None
-    assert sorted(topics) == sorted(['fakedevice', 'fakedevice2/all',
-                                     'fakedevice2/point'])
+    assert sorted(topics) == sorted(['fakedevice', 'fakedevice2/all', 'fakedevice2/point'])
     assert len(alert_messages) == 1
 
     c.execute('SELECT * FROM topic_log '
               'WHERE first_seen_after_timeout is NULL '
-              'AND last_seen_before_timeout > ?', (publish_time,))
+              'AND last_seen_before_timeout > ?', (publish_time, ))
     results = c.fetchall()
     topics = []
     assert results is not None
@@ -172,15 +152,11 @@ def test_ignore_topic(agent):
     """
     global alert_messages, db_connection
 
-    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'ignore_topic', 'group1',
-                       'fakedevice2/all').get()
+    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'ignore_topic', 'group1', 'fakedevice2/all').get()
     alert_messages.clear()
     publish_time = get_aware_utc_now()
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice')
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice2/all',
-                             message=[{'point': 'value'}])
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
     print("Alert messages {}".format(alert_messages))
     gevent.sleep(7)
     assert len(alert_messages) == 1
@@ -216,14 +192,10 @@ def test_watch_topic_same_group(volttron_instance, agent, cleanup_db):
     volttron_instance.start_agent(alert_uuid)
     gevent.sleep(1)
     publish_time = get_aware_utc_now()
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice')
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice2/all',
-                             message=[{'point': 'value'}])
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
     gevent.sleep(2)
-    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_topic', 'group1', 'newtopic',
-                       5).get()
+    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_topic', 'group1', 'newtopic', 5).get()
     gevent.sleep(6)
 
     assert \
@@ -271,14 +243,10 @@ def test_watch_topic_new_group(volttron_instance, agent, cleanup_db):
     volttron_instance.start_agent(alert_uuid)
     gevent.sleep(1)
     publish_time = get_aware_utc_now()
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice')
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice2/all',
-                             message=[{'point': 'value'}])
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
     gevent.sleep(1)
-    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_topic', 'group2', 'newtopic',
-                       5).get()
+    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_topic', 'group2', 'newtopic', 5).get()
     gevent.sleep(6)
 
     assert len(alert_messages) == 2
@@ -328,14 +296,10 @@ def test_watch_device_same_group(volttron_instance, agent, cleanup_db):
     volttron_instance.start_agent(alert_uuid)
     gevent.sleep(1)
     publish_time = get_aware_utc_now()
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice')
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice2/all',
-                             message=[{'point': 'value'}])
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
     gevent.sleep(1)
-    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_device', 'group1',
-                       'newtopic/all', 5, ['point']).get()
+    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_device', 'group1', 'newtopic/all', 5, ['point']).get()
     gevent.sleep(6)
 
     assert "Topic(s) not published within time limit: ['fakedevice', " \
@@ -359,8 +323,7 @@ def test_watch_device_same_group(volttron_instance, agent, cleanup_db):
     topics = []
     assert results is not None
     assert len(results) == 2
-    assert {results[0][0], results[1][0]} == {'newtopic/all',
-                                              'newtopic/point'}
+    assert {results[0][0], results[1][0]} == {'newtopic/all', 'newtopic/point'}
     assert results[0][2] == results[1][2] is None
 
     c.execute('SELECT * FROM topic_log '
@@ -389,14 +352,10 @@ def test_watch_device_new_group(volttron_instance, agent, cleanup_db):
     volttron_instance.start_agent(alert_uuid)
     gevent.sleep(1)
     publish_time = get_aware_utc_now()
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice')
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice2/all',
-                             message=[{'point': 'value'}])
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
     gevent.sleep(1)
-    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_device', 'group2',
-                       'newtopic/all', 5, ['point']).get()
+    agent.vip.rpc.call(PLATFORM_TOPIC_WATCHER, 'watch_device', 'group2', 'newtopic/all', 5, ['point']).get()
     gevent.sleep(6)
 
     assert len(alert_messages) == 2
@@ -422,8 +381,7 @@ def test_watch_device_new_group(volttron_instance, agent, cleanup_db):
     topics = []
     assert results is not None
     assert len(results) == 2
-    assert {results[0][0], results[1][0]} == {'newtopic/all',
-                                              'newtopic/point'}
+    assert {results[0][0], results[1][0]} == {'newtopic/all', 'newtopic/point'}
     assert results[0][2] == results[1][2] is None
 
     c.execute('SELECT * FROM topic_log '
@@ -503,11 +461,8 @@ def test_for_duplicate_logs(volttron_instance, agent, cleanup_db):
     assert len(results) == 3
 
     publish_time = get_aware_utc_now()
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice')
-    agent.vip.pubsub.publish(peer='pubsub',
-                             topic='fakedevice2/all',
-                             message=[{'point': 'value'}])
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice')
+    agent.vip.pubsub.publish(peer='pubsub', topic='fakedevice2/all', message=[{'point': 'value'}])
     gevent.sleep(2)
     c = db_connection.cursor()
     c.execute('SELECT topic, last_seen_before_timeout, '
