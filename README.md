@@ -4,59 +4,25 @@ The Topic Watcher Agent listens to a set of configured topics and publishes an a
 some time limit.  In addition to for individual messages or data points, the Topic Watcher Agent supports inspecting
 device "all" topics.  This can be useful when a device contains volatile points that may not be published.
 
-## Prerequisites
+## Requires
 
-* Python 3.10
-
-## Python
-
-<details>
-<summary>To install Python 3.10, we recommend using <a href="https://github.com/pyenv/pyenv"><code>pyenv</code></a>.</summary>
-
-```bash
-# install pyenv
-git clone https://github.com/pyenv/pyenv ~/.pyenv
-
-# setup pyenv (you should also put these three lines in .bashrc or similar)
-export PATH="${HOME}/.pyenv/bin:${PATH}"
-export PYENV_ROOT="${HOME}/.pyenv"
-eval "$(pyenv init -)"
-
-# install Python 3.10
-pyenv install 3.10
-
-# make it available globally
-pyenv global system 3.10
-```
-
-</details>
+* python >= 3.10
+* volttron >= 10.0
 
 ## Installation
 
-1. Create and activate a virtual environment.
+Before installing, VOLTTRON should be installed and running.  Its virtual environment should be active.
+Information on how to install of the VOLTTRON platform can be found
+[here](https://github.com/eclipse-volttron/volttron-core).
 
-```shell
-python -m venv env
-source env/bin/activate
-```
-
-2. Install volttron and start the platform.
-
-```shell
-pip install volttron
-
-# Start platform with output going to volttron.log
-volttron -vv -l volttron.log &
-```
-
-3. Create a config directory and navigate to it:
+Create a directory called `config` and use the change directory command to enter it.
 
 ```shell
 mkdir config
 cd config
 ```
 
-Navigate to the config directory and create a file called `topic_watcher.config`. Use the instructions below to populate that file with the correct JSON.
+After entering the config directory, create a file called `topic_watcher.json`. Use the instructions below to populate that file with the correct JSON.
 
 Topics are organized by groups in a JSON structure with the group's identifier as the key. Any alerts raised will
 summarize all missing topics in the group.
@@ -104,26 +70,23 @@ It is possible to configure the Topic Watcher to handle both "all" topics and si
 }
 ```
 
-4. Intsall and start topic watcher in VOLTTRON.
+Intsall and start topic watcher in VOLTTRON.
 
 ```shell
-vctl install volttron-topic-watcher --agent-config topic_watcher.config --vip-identity platform.topic_watcher --start --force
+vctl install volttron-topic-watcher --agent-config topic_watcher.json --vip-identity platform.topic_watcher --start --force
 ```
 
-### Example Publish
+View the status of the installed agent
 
-The following is an example publish from the Topic Watcher Agent using the above configuration.
-
-```log
-Peer: pubsub
-Sender: platform.topic_watcher
-Bus:
-Topic: alerts/AlertAgent/james_platform_topic_watcher
-Headers: {'alert_key': 'AlertAgent Timeout for group group1', 'min_compatible_version': '3.0', 'max_compatible_version': ''}
-Message: ('{"status": "BAD", "context": "Topic(s) not published within time limit: '
-           '[\'devices/fakedriver0/all\']", "last_updated": '
-           '"2021-01-25T23:10:07.905633+00:00"}')
+```shell
+vctl status
 ```
+
+## Development
+
+Please see the following for contributing guidelines [contributing](https://github.com/eclipse-volttron/volttron-core/blob/develop/CONTRIBUTING.md).
+
+Please see the following helpful guide about [developing modular VOLTTRON agents](https://github.com/eclipse-volttron/volttron-core/blob/develop/DEVELOPING_ON_MODULAR.md)
 
 ## Disclaimer Notice
 
