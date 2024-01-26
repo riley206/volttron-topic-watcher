@@ -1,0 +1,11 @@
+{
+  "device_group": {
+    "devices/fakedriver1/all": {
+      "points": [
+        "temperature",
+        "PowerState"
+      ],
+      "seconds": 10
+    }
+  }
+}
