@@ -34,7 +34,6 @@ from volttron.client.messaging.health import STATUS_BAD, STATUS_GOOD, Status
 from volttron.client.vip.agent import RPC, Agent, Core, build_agent
 from volttron.utils.scheduling import periodic
 from volttron.utils.time import get_aware_utc_now
-from zmq import ZMQError
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -99,7 +98,7 @@ class AlertAgent(Agent):
                         status_context = "Couldn't connect to remote platform at: {}".format(self.remote_address)
                         _log.error(status_context)
                         self._remote_agent = None
-                except (gevent.Timeout, ZMQError):
+                except (gevent.Timeout):
                     _log.error("Exception creation remote agent")
                     status_context = "Couldn't connect to remote platform at: {}".format(self.remote_address)
                     _log.error(status_context)
@@ -291,7 +290,7 @@ class AlertAgent(Agent):
             if alert_topics:
                 try:
                     self.group_instances[name].send_alert(list(alert_topics))
-                except ZMQError:
+                except Exception:
                     self.group_instances[name].main_agent.reset_remote_agent()
 
             if topics_timedout:
