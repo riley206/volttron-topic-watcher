@@ -82,11 +82,6 @@ class AlertAgent(Agent):
             if not self._creating_agent:
                 self._creating_agent = True
                 try:
-                    # Single method to connect to remote instance in following combinations
-                    # zmq -> zmq
-                    # rmq -> rmq enabled with web
-                    # zmq -> zmq enabled with web
-                    # rmq -> zmq enabled with web
                     value = self.core.connect_remote_platform(self.remote_address, serverkey=self.remote_serverkey)
 
                     if isinstance(value, Agent):
