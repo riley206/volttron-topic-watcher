@@ -38,7 +38,7 @@ from volttron.utils.time import get_aware_utc_now
 utils.setup_logging()
 _log = logging.getLogger(__name__)
 
-__version__ = '2.1'
+__version__ = "2.1"
 
 
 class AlertAgent(Agent):
@@ -48,7 +48,7 @@ class AlertAgent(Agent):
         self.config = utils.load_config(config_path)
         self.group_instances = {}
         self._connection = None
-        self.publish_settings = self.config.get('publish-settings')
+        self.publish_settings = self.config.get("publish-settings")
         self._remote_agent = None
         self._creating_agent = False
         self._resetting_remote_agent = False
@@ -56,15 +56,15 @@ class AlertAgent(Agent):
         self.publish_local = True
 
         if self.publish_settings:
-            self.publish_local = self.publish_settings.get('publish-local', True)
-            self.publish_remote = self.publish_settings.get('publish-remote', False)
-            remote = self.publish_settings.get('remote')
+            self.publish_local = self.publish_settings.get("publish-local", True)
+            self.publish_remote = self.publish_settings.get("publish-remote", False)
+            remote = self.publish_settings.get("remote")
             if self.publish_remote and not remote:
                 raise ValueError("Configured publish-remote without remote section")
 
-            self.remote_identity = remote.get('identity', None)
-            self.remote_serverkey = remote.get('serverkey', None)
-            self.remote_address = remote.get('vip-address', None)
+            self.remote_identity = remote.get("identity", None)
+            self.remote_serverkey = remote.get("serverkey", None)
+            self.remote_address = remote.get("vip-address", None)
 
             # The remote serverkey need not be specified if the serverkey is added
             # to the known hosts file.  If it is not specified then the call to
@@ -90,12 +90,12 @@ class AlertAgent(Agent):
                         self.vip.health.set_status(STATUS_GOOD)
                     else:
                         _log.error("Exception creation remote agent")
-                        status_context = "Couldn't connect to remote platform at: {}".format(self.remote_address)
+                        status_context = ("Couldn't connect to remote platform at: {}".format(self.remote_address))
                         _log.error(status_context)
                         self._remote_agent = None
-                except (gevent.Timeout):
+                except gevent.Timeout:
                     _log.error("Exception creation remote agent")
-                    status_context = "Couldn't connect to remote platform at: {}".format(self.remote_address)
+                    status_context = ("Couldn't connect to remote platform at: {}".format(self.remote_address))
                     _log.error(status_context)
                     self._remote_agent = None
                     self.vip.health.set_status(STATUS_BAD, status_context)
@@ -110,13 +110,13 @@ class AlertAgent(Agent):
             self._remote_agent = None
             self._resetting_remote_agent = False
 
-    @Core.receiver('onstart')
+    @Core.receiver("onstart")
     def onstart(self, sender, **kwargs):
         """
         Setup database tables for persistent logs
         """
-        volttron_home = os.environ.get('VOLTTRON_HOME')
-        db_dir = os.path.join(volttron_home, 'agents', 'platform.topic_watcher', 'data')
+        volttron_home = os.environ.get("VOLTTRON_HOME")
+        db_dir = os.path.join(volttron_home, "agents", "platform.topic_watcher", "data")
         # TODO When modular has secure mode.
         if False:
             if utils.is_secure_mode():
@@ -127,8 +127,10 @@ class AlertAgent(Agent):
                 if data_dir:
                     db_dir = os.path.join(os.getcwd(), data_dir)
 
-        self._connection = sqlite3.connect(os.path.join(db_dir, 'alert_log.sqlite'),
-                                           detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+        self._connection = sqlite3.connect(
+            os.path.join(db_dir, "alert_log.sqlite"),
+            detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+        )
         c = self._connection.cursor()
 
         c.execute("CREATE TABLE IF NOT EXISTS topic_log( "
@@ -154,24 +156,29 @@ class AlertAgent(Agent):
         self._connection.commit()
 
         for group_name, config in self.config.items():
-            if group_name != 'publish-settings':
+            if group_name != "publish-settings":
                 self.group_instances[group_name] = self.create_alert_group(group_name, config)
 
     def create_alert_group(self, group_name, config):
-        group = AlertGroup(group_name,
-                           config,
-                           self._connection,
-                           main_agent=self,
-                           publish_local=self.publish_local,
-                           publish_remote=self.publish_remote)
+        group = AlertGroup(
+            group_name,
+            config,
+            self._connection,
+            main_agent=self,
+            publish_local=self.publish_local,
+            publish_remote=self.publish_remote,
+        )
 
         return group
 
-    @Core.receiver('onstop')
+    @Core.receiver("onstop")
     def onstop(self, sender, **kwargs):
         c = self._connection.cursor()
-        c.execute("UPDATE agent_log set stop_time = ? "
-                  " WHERE start_time = (SELECT max(start_time) from agent_log)", (get_aware_utc_now(), ))
+        c.execute(
+            "UPDATE agent_log set stop_time = ? "
+            " WHERE start_time = (SELECT max(start_time) from agent_log)",
+            (get_aware_utc_now(), ),
+        )
         c.close()
         gevent.sleep(0.1)
         self._connection.commit()
@@ -274,7 +281,8 @@ class AlertAgent(Agent):
                     for p in points:
                         self.group_instances[name].point_ttl[topic][p] -= 1
                         if self.group_instances[name].point_ttl[topic][p] <= 0:
-                            self.group_instances[name].point_ttl[topic][p] = self.group_instances[name].wait_time[topic]
+                            self.group_instances[name].point_ttl[topic][p] = (
+                                self.group_instances[name].wait_time[topic])
                             alert_topics.add((topic, p))
                             if (topic, p) not in self.group_instances[name].unseen_topics:
                                 topics_timedout.add((topic, p))
@@ -292,9 +300,17 @@ class AlertAgent(Agent):
                 self.group_instances[name].log_timeout(list(topics_timedout))
 
 
-class AlertGroup():
+class AlertGroup:
 
-    def __init__(self, group_name, config, connection, main_agent, publish_local=True, publish_remote=False):
+    def __init__(
+        self,
+        group_name,
+        config,
+        connection,
+        main_agent,
+        publish_local=True,
+        publish_remote=False,
+    ):
         self.group_name = group_name
         self.connection = connection
         self.config = config
@@ -336,7 +352,7 @@ class AlertGroup():
         """
         self.wait_time[topic] = timeout
         self.topic_ttl[topic] = timeout
-        self.main_agent.vip.pubsub.subscribe(peer='pubsub', prefix=topic, callback=self.reset_time)
+        self.main_agent.vip.pubsub.subscribe(peer="pubsub", prefix=topic, callback=self.reset_time)
 
     def watch_device(self, topic: str, timeout: int, points: str):
         """Watch a device's ALL topic and expect points. This
@@ -365,7 +381,7 @@ class AlertGroup():
         """
         _log.info("Removing topic {} from watchlist".format(topic))
 
-        self.main_agent.vip.pubsub.unsubscribe(peer='pubsub', prefix=topic, callback=self.reset_time)
+        self.main_agent.vip.pubsub.unsubscribe(peer="pubsub", prefix=topic, callback=self.reset_time)
         points = self.point_ttl.pop(topic, None)
         self.topic_ttl.pop(topic, None)
         self.wait_time.pop(topic, None)
@@ -446,8 +462,11 @@ class AlertGroup():
             values.append((self.get_topic_name(topic), self.last_seen.get(topic)))
 
         c = self.connection.cursor()
-        c.executemany("INSERT INTO topic_log (topic, last_seen_before_timeout) "
-                      "VALUES (?, ?)", values)
+        c.executemany(
+            "INSERT INTO topic_log (topic, last_seen_before_timeout) "
+            "VALUES (?, ?)",
+            values,
+        )
         c.close()
         self.connection.commit()
 
@@ -472,7 +491,9 @@ class AlertGroup():
                 "SET first_seen_after_timeout = ? "
                 "WHERE rowid = "
                 " (SELECT max(rowid) FROM topic_log "
-                "  WHERE topic = ? )", (up_time, self.get_topic_name(topic)))
+                "  WHERE topic = ? )",
+                (up_time, self.get_topic_name(topic)),
+            )
 
         c.close()
         self.connection.commit()
@@ -533,7 +554,7 @@ def main():
     utils.vip_main(AlertAgent, identity=PLATFORM_TOPIC_WATCHER, version=__version__)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
