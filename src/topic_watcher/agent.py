@@ -34,6 +34,7 @@ from volttron.client.messaging.health import STATUS_BAD, STATUS_GOOD, Status
 from volttron.client.vip.agent import RPC, Agent, Core, build_agent
 from volttron.utils.scheduling import periodic
 from volttron.utils.time import get_aware_utc_now
+from volttron.utils import ClientContext
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -117,15 +118,14 @@ class AlertAgent(Agent):
         """
         volttron_home = os.environ.get("VOLTTRON_HOME")
         db_dir = os.path.join(volttron_home, "agents", "platform.topic_watcher", "data")
-        # TODO When modular has secure mode.
-        if False:
-            if utils.is_secure_mode():
-                for d in os.listdir(os.path.basename(os.getcwd())):
-                    if d.endswith(".agent-data"):
-                        data_dir = d
-                        break
-                if data_dir:
-                    db_dir = os.path.join(os.getcwd(), data_dir)
+
+        if ClientContext.is_secure_mode():
+            for d in os.listdir(os.path.basename(os.getcwd())):
+                if d.endswith(".agent-data"):
+                    data_dir = d
+                    break
+            if data_dir:
+                db_dir = os.path.join(os.getcwd(), data_dir)
 
         self._connection = sqlite3.connect(
             os.path.join(db_dir, "alert_log.sqlite"),
