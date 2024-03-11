@@ -27,6 +27,8 @@ import sqlite3
 
 import gevent
 import pytest
+
+from pathlib import Path
 from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
 from volttron.utils import jsonapi
 from volttron.utils.time import get_aware_utc_now
@@ -45,7 +47,9 @@ alert_uuid = None
 def agent(request, volttron_instance):
     global db_connection, agent_version, db_path, alert_uuid
 
-    alert_uuid = volttron_instance.install_agent(agent_dir="volttron-topic-watcher",
+    agent_path = Path(__file__).parents[1]
+
+    alert_uuid = volttron_instance.install_agent(agent_dir=agent_path,
                                                  config_file=WATCHER_CONFIG,
                                                  vip_identity=PLATFORM_TOPIC_WATCHER)
     gevent.sleep(2)
