@@ -73,7 +73,7 @@ It is possible to configure the Topic Watcher to handle both "all" topics and si
 After populating your configuration file, install and start topic watcher in VOLTTRON.
 
 ```shell
-vctl install volttron-topic-watcher --agent-config topic_watcher.json --vip-identity platform.topic_watcher --start --force
+vctl install volttron-topic-watcher --agent-config topic_watcher.json --vip-identity platform.topic_watcher --start
 ```
 
 View the status of the installed agent
