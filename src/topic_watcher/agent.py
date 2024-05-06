@@ -117,7 +117,7 @@ class AlertAgent(Agent):
         Setup database tables for persistent logs
         """
         volttron_home = ClientContext.get_volttron_home()
-        db_dir = os.path.join(volttron_home, "agents", PLATFORM_TOPIC_WATCHER, "data")
+        db_dir = os.path.join(volttron_home, "agents", self.core.identity, "data")
 
         if ClientContext.is_secure_mode():
             for d in os.listdir(os.path.basename(os.getcwd())):
