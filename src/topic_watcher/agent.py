@@ -46,7 +46,10 @@ class AlertAgent(Agent):
 
     def __init__(self, config_path: str, **kwargs: any):
         super(AlertAgent, self).__init__(**kwargs)
-        self.config = utils.load_config(config_path)
+        if config_path:
+            self.config = utils.load_config(config_path)
+        else:
+            self.config = {}
         self.group_instances = {}
         self._connection = None
         self.publish_settings = self.config.get("publish-settings")
@@ -76,6 +79,48 @@ class AlertAgent(Agent):
             if self.publish_remote:
                 assert self.remote_identity
                 assert self.remote_address
+
+        self.vip.config.subscribe(self.configure_main, actions=["NEW", "UPDATE"], pattern="config")
+
+    def configure_main(self, config_name, action, contents):
+        if action == "NEW":
+            for group_name, config in contents.items():
+                self.group_instances[group_name] = self.create_alert_group(group_name, config)
+        elif action == "UPDATE":
+            new_groups = contents.keys() - self.config.keys()
+            updated_groups = contents.keys() & self.config.keys()
+            removed_groups = self.config.keys() - contents.keys()
+
+            # remove groups that are no longer in the config
+            for group_name in removed_groups:
+                self.group_instances.pop(group_name, None)
+
+            for group_name in new_groups:
+                self.group_instances[group_name] = self.create_alert_group(group_name, contents[group_name])
+
+            for group_name in updated_groups:
+                new_config = contents[group_name]
+                old_config = self.config[group_name]
+
+                if new_config != old_config:
+                    # check for new devices or updated settings within the group
+                    for topic, settings in new_config.items():
+                        if topic not in old_config:
+                            self.group_instances[group_name].watch_topic(topic, settings["seconds"])
+                        elif settings != old_config[topic]:
+                            self.group_instances[group_name].watch_device(topic, settings["seconds"],
+                                                                          settings["points"])
+
+                    # remove devices no longer in the config
+                    for topic in old_config.keys() - new_config.keys():
+                        self.group_instances[group_name].ignore_topic(topic)
+
+                    # restart timer for the updated group.
+                    self.group_instances[group_name].restart_timer()
+
+            _log.debug(f"Configuring Topic Watcher Agent with config: {contents}")
+
+        self.config = contents
 
     @property
     def remote_agent(self):
@@ -154,10 +199,6 @@ class AlertAgent(Agent):
         c.execute("INSERT INTO agent_log(start_time) values(?)", (get_aware_utc_now(), ))
         c.close()
         self._connection.commit()
-
-        for group_name, config in self.config.items():
-            if group_name != "publish-settings":
-                self.group_instances[group_name] = self.create_alert_group(group_name, config)
 
     def create_alert_group(self, group_name, config):
         group = AlertGroup(
