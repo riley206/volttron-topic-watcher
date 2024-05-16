@@ -46,10 +46,7 @@ class AlertAgent(Agent):
 
     def __init__(self, config_path: str, **kwargs: any):
         super(AlertAgent, self).__init__(**kwargs)
-        if config_path:
-            self.config = utils.load_config(config_path)
-        else:
-            self.config = {}
+        self.config = utils.load_config(config_path) if config_path else {}
         self.group_instances = {}
         self._connection = None
         self.publish_settings = self.config.get("publish-settings")
@@ -199,6 +196,11 @@ class AlertAgent(Agent):
         c.execute("INSERT INTO agent_log(start_time) values(?)", (get_aware_utc_now(), ))
         c.close()
         self._connection.commit()
+
+        if self.config:
+            for group_name, config in self.config.items():
+                if group_name != 'publish-settings':
+                    self.group_instances[group_name] = self.create_alert_group(group_name, config)
 
     def create_alert_group(self, group_name, config):
         group = AlertGroup(
