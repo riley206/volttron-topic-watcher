@@ -1,0 +1,11 @@
+{
+  "group1": {
+    "fakedevice": 5,
+    "fakedevice2/all": {
+      "points": [
+        "point"
+      ],
+      "seconds": 5
+    }
+  }
+}
