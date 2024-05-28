@@ -100,5 +100,5 @@ def test_config_store(volttron_instance, agent, cleanup_db):
     alert_messages.clear()
     gevent.sleep(5)
 
-    expected_message = "Topic(s) not published within time limit: ['fakedevice', 'fakedevice2/all', ('fakedevice2/all', 'point')]"
+    expected_message = "Topic(s) not published within time limit: ['fakedevice', ('fakedevice2/all', 'point'), 'fakedevice2/all']"
     assert expected_message in alert_messages.keys(), f"Expected message not found in alert messages: {alert_messages}"
