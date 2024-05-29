@@ -102,3 +102,49 @@ def test_config_store(volttron_instance, agent, cleanup_db):
 
     expected_message = "Topic(s) not published within time limit: ['fakedevice', ('fakedevice2/all', 'point'), 'fakedevice2/all']"
     assert expected_message in alert_messages.keys(), f"Expected message not found in alert messages: {alert_messages}"
+
+
+@pytest.mark.alert
+def test_update_config_store(volttron_instance, agent, cleanup_db):
+    """
+    Test updating the agent configuration by deleting the old config and adding a new one while its running.
+    """
+    global alert_messages
+    gevent.sleep(1)
+
+    capabilities = {"edit_config_store": {"identity": PLATFORM_TOPIC_WATCHER}}
+    volttron_instance.add_capabilities(agent.core.publickey, capabilities)
+    gevent.sleep(1)
+
+    # new config with different point names
+    new_config = {"group1": {"newdevice": 5, "newdevice2/all": {"seconds": 5, "points": ["newpoint"]}}}
+
+    # delete old config and apply new config
+    try:
+        agent.vip.rpc.call(CONFIGURATION_STORE, "manage_delete_store", PLATFORM_TOPIC_WATCHER).get(timeout=10)
+        print("Configuration deleted")
+    except Exception as e:
+        print(f"Error during manage_delete_store call: {e}")
+        raise
+    gevent.sleep(2)
+
+    try:
+        agent.vip.rpc.call(CONFIGURATION_STORE,
+                           "manage_store",
+                           PLATFORM_TOPIC_WATCHER,
+                           "config",
+                           json.dumps(new_config),
+                           config_type="json").get(timeout=10)
+        print("New configuration added")
+    except Exception as e:
+        print(f"Error during new manage_store call: {e}")
+        raise
+
+    gevent.sleep(5)
+    alert_messages.clear()
+    gevent.sleep(10)
+
+    expected_new_message = "Topic(s) not published within time limit: ['newdevice', ('newdevice2/all', 'newpoint'), 'newdevice2/all']"
+    print(f"Updated Alert Messages: {alert_messages}")
+    assert expected_new_message in alert_messages.keys(
+    ), f"Expected new message not found in alert messages: {alert_messages}"
