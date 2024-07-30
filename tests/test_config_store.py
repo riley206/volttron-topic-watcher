@@ -100,8 +100,11 @@ def test_config_store(volttron_instance, agent, cleanup_db):
     alert_messages.clear()
     gevent.sleep(5)
 
-    expected_message = "Topic(s) not published within time limit: ['fakedevice', ('fakedevice2/all', 'point'), 'fakedevice2/all']"
-    assert expected_message in alert_messages.keys(), f"Expected message not found in alert messages: {alert_messages}"
+    assert list(alert_messages.keys())[0].startswith("Topic(s) not published within time limit: [")
+    alert_topics = list(alert_messages.keys())[0].split("Topic(s) not published within time limit: [")[1]
+    assert "'fakedevice'" in alert_topics
+    assert "'fakedevice2/all'" in alert_topics
+    assert "('fakedevice2/all', 'point')" in alert_topics
 
 
 @pytest.mark.alert
@@ -144,7 +147,14 @@ def test_update_config_store(volttron_instance, agent, cleanup_db):
     alert_messages.clear()
     gevent.sleep(10)
 
-    expected_new_message = "Topic(s) not published within time limit: ['newdevice', ('newdevice2/all', 'newpoint'), 'newdevice2/all']"
     print(f"Updated Alert Messages: {alert_messages}")
-    assert expected_new_message in alert_messages.keys(
-    ), f"Expected new message not found in alert messages: {alert_messages}"
+    assert list(alert_messages.keys())[0].startswith("Topic(s) not published within time limit: [")
+    alert_topics = list(alert_messages.keys())[0].split("Topic(s) not published within time limit: [")[1]
+
+    assert "'fakedevice'" not in alert_topics
+    assert "'fakedevice2/all'" not in alert_topics
+    assert "('fakedevice2/all', 'point')" not in alert_topics
+
+    assert "'newdevice'" in alert_topics
+    assert "'newdevice2/all'" in alert_topics
+    assert "('newdevice2/all', 'newpoint')" in alert_topics

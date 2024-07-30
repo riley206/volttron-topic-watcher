@@ -29,25 +29,31 @@ import gevent
 import pytest
 
 from pathlib import Path
-from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER
+from volttron.client.known_identities import PLATFORM_TOPIC_WATCHER, CONFIGURATION_STORE
 from volttron.utils import jsonapi
 from volttron.utils.time import get_aware_utc_now
+from volttrontesting import TestServer
+from volttron.client import Agent
+from volttrontesting.platformwrapper import PlatformWrapper
 
 agent_version = "2.1"
-WATCHER_CONFIG = {"group1": {"fakedevice": 5, "fakedevice2/all": {"seconds": 5, "points": ["point"]}}}
+WATCHER_CONFIG = {
+    "group1": {
+        "fakedevice": 5,
+        "fakedevice2/all": {"seconds": 5, "points": ["point"]}
+    }
+}
 
 alert_messages = {}
-
 db_connection = None
 db_path = None
 alert_uuid = None
 
-
 @pytest.fixture(scope="module")
-def agent(request, volttron_instance):
+def agent(request, volttron_instance: PlatformWrapper):
     global db_connection, agent_version, db_path, alert_uuid
-
     agent_path = Path(__file__).parents[1]
+
 
     alert_uuid = volttron_instance.install_agent(
         agent_dir=agent_path,
@@ -79,6 +85,11 @@ def agent(request, volttron_instance):
     db_connection = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 
     agent = volttron_instance.build_agent()
+    gevent.sleep(1)
+
+    capabilities = {"edit_config_store": {"identity": PLATFORM_TOPIC_WATCHER}}
+    print("CAPABILITIES: {}".format(capabilities))
+    volttron_instance.add_capabilities(agent.core.publickey, capabilities)
 
     def onmessage(peer, sender, bus, topic, headers, message):
         global alert_messages
@@ -132,6 +143,8 @@ def test_basic(agent):
     c.execute("SELECT * FROM topic_log "
               'WHERE last_seen_before_timeout > "{}"'.format(publish_time))
     result = c.fetchall()
+    for row in result:
+        print(f"row: {row}")
     assert not result
 
     gevent.sleep(6)
@@ -484,3 +497,10 @@ def test_for_duplicate_logs(volttron_instance, agent, cleanup_db):
         assert r[1] is None
         naive_timestamp = publish_time.replace(tzinfo=None)
         assert r[2] >= naive_timestamp
+
+@pytest.mark.alert
+def test_config_store(volttron_instance, agent, cleanup_db):
+
+    capabilities = {"edit_config_store": {"identity": PLATFORM_TOPIC_WATCHER}}
+    volttron_instance.add_capabilities(agent.core.publickey, capabilities)
+    agent.vip.rpc.call(CONFIGURATION_STORE, "manage_store", PLATFORM_TOPIC_WATCHER, "", jsonapi.dumps(WATCHER_CONFIG), config_type='json')

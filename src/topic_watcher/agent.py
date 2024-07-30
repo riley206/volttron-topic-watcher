@@ -103,10 +103,17 @@ class AlertAgent(Agent):
                     # check for new devices or updated settings within the group
                     for topic, settings in new_config.items():
                         if topic not in old_config:
-                            self.group_instances[group_name].watch_topic(topic, settings["seconds"])
+                            if isinstance(settings, dict):
+                                self.group_instances[group_name].watch_device(topic, settings["seconds"],
+                                                                              settings["points"])
+                            else:
+                                self.group_instances[group_name].watch_topic(topic, settings)
                         elif settings != old_config[topic]:
-                            self.group_instances[group_name].watch_device(topic, settings["seconds"],
-                                                                          settings["points"])
+                            if isinstance(settings, dict):
+                                self.group_instances[group_name].watch_device(topic, settings["seconds"],
+                                                                              settings["points"])
+                            else:
+                                self.group_instances[group_name].watch_topic(topic, settings)
 
                     # remove devices no longer in the config
                     for topic in old_config.keys() - new_config.keys():
@@ -335,11 +342,13 @@ class AlertAgent(Agent):
 
             if alert_topics:
                 try:
+                    _log.info(f"Sending alert for {list(alert_topics)}")
                     self.group_instances[name].send_alert(list(alert_topics))
                 except Exception:
                     self.group_instances[name].main_agent.reset_remote_agent()
 
             if topics_timedout:
+                _log.info(f"logging time out for {list(topics_timedout)}")
                 self.group_instances[name].log_timeout(list(topics_timedout))
 
 
@@ -425,7 +434,7 @@ class AlertGroup:
         _log.info("Removing topic {} from watchlist".format(topic))
 
         self.main_agent.vip.pubsub.unsubscribe(peer="pubsub", prefix=topic, callback=self.reset_time)
-        points = self.point_ttl.pop(topic, None)
+        points = self.point_ttl.pop(topic, [])
         self.topic_ttl.pop(topic, None)
         self.wait_time.pop(topic, None)
         self.unseen_topics.remove(topic)
