@@ -37,23 +37,18 @@ from volttron.client import Agent
 from volttrontesting.platformwrapper import PlatformWrapper
 
 agent_version = "2.1"
-WATCHER_CONFIG = {
-    "group1": {
-        "fakedevice": 5,
-        "fakedevice2/all": {"seconds": 5, "points": ["point"]}
-    }
-}
+WATCHER_CONFIG = {"group1": {"fakedevice": 5, "fakedevice2/all": {"seconds": 5, "points": ["point"]}}}
 
 alert_messages = {}
 db_connection = None
 db_path = None
 alert_uuid = None
 
+
 @pytest.fixture(scope="module")
 def agent(request, volttron_instance: PlatformWrapper):
     global db_connection, agent_version, db_path, alert_uuid
     agent_path = Path(__file__).parents[1]
-
 
     alert_uuid = volttron_instance.install_agent(
         agent_dir=agent_path,
@@ -498,9 +493,15 @@ def test_for_duplicate_logs(volttron_instance, agent, cleanup_db):
         naive_timestamp = publish_time.replace(tzinfo=None)
         assert r[2] >= naive_timestamp
 
+
 @pytest.mark.alert
 def test_config_store(volttron_instance, agent, cleanup_db):
 
     capabilities = {"edit_config_store": {"identity": PLATFORM_TOPIC_WATCHER}}
     volttron_instance.add_capabilities(agent.core.publickey, capabilities)
-    agent.vip.rpc.call(CONFIGURATION_STORE, "manage_store", PLATFORM_TOPIC_WATCHER, "", jsonapi.dumps(WATCHER_CONFIG), config_type='json')
+    agent.vip.rpc.call(CONFIGURATION_STORE,
+                       "manage_store",
+                       PLATFORM_TOPIC_WATCHER,
+                       "",
+                       jsonapi.dumps(WATCHER_CONFIG),
+                       config_type='json')
